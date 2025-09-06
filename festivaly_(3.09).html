@@ -372,4 +372,150 @@ const posSel     = document.getElementById('erw-pos-select');
   }
 })();
 </script>
+
+<style id="sabor-mobile-modal-tweaks">
+:root{
+  --sabor-btn-w: 220px;
+  --sabor-btn-h: 54px;
+  --sabor-btn-fs: 18px;
+}
+/* Единый масштаб для двух кнопок */
+.sabor-fixed-scale{
+  width: var(--sabor-btn-w) !important;
+  height: var(--sabor-btn-h) !important;
+  font-size: var(--sabor-btn-fs) !important;
+  line-height: 1.2 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* Крупная модалка на телефоне */
+@media (max-width: 640px){
+  .sabor-phone-modal{
+    width: 85vw !important;
+    height: 85vh !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+  .sabor-phone-modal textarea, .sabor-phone-modal input[type="text"], .sabor-phone-modal input[type="email"]{
+    font-size: 18px !important;
+  }
+}
+
+/* Центрируем системное сообщение после отправки */
+.sabor-center-toast{
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+.sabor-center-toast .toast-box{
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+</style>
+
+
+<script id="sabor-mobile-modal-script">
+(function(){
+  function text(el){
+    return (el.textContent || el.innerText || "").trim().toLowerCase();
+  }
+
+  // Приравниваем размеры двух кнопок
+  function uniformButtons(){
+    var btns = Array.from(document.querySelectorAll('a,button,input[type="button"],input[type="submit"]'));
+    var reports = btns.filter(function(b){
+      var t = text(b);
+      return t.includes('сообщить об ошибке') || t.includes('сообщить об ошибке');
+    });
+    var tocs = btns.filter(function(b){
+      var t = text(b);
+      return t.includes('к оглавлению') || t.includes('вернуться к оглавлению');
+    });
+    reports.concat(tocs).forEach(function(b){
+      b.classList.add('sabor-fixed-scale');
+      // убираем растягивание по ширине контейнера
+      b.style.maxWidth = 'none';
+    });
+  }
+
+  // Делаем модалки большими на мобильных
+  function enlargeModals(){
+    var modals = Array.from(document.querySelectorAll('[role="dialog"], .modal, [class*="modal"], [id*="modal"]'));
+    modals.forEach(function(m){
+      var content = m.querySelector('.modal-content, .modal__content, .content, .window, .dialog, .modal-inner, .popup, .form, form') || m;
+      content.classList.add('sabor-phone-modal');
+    });
+  }
+
+  // Красивое центральное уведомление после отправки
+  function attachSubmitToast(){
+    document.addEventListener('click', function(e){
+      var trg = e.target && (e.target.closest('button, input[type="submit"]'));
+      if(!trg) return;
+      var t = (trg.value || trg.textContent || '').toLowerCase();
+      if(t.includes('отправить')){
+        // Ждём чуть-чуть, чтобы не мешать стандартной логике
+        setTimeout(function(){
+          // Попытка взять готовый текст из страницы (если есть)
+          var msgText = 'Сообщение отправлено';
+          try{
+            var candidates = Array.from(document.querySelectorAll('[data-toast], .toast, .notice, [aria-live]'));
+            var found = candidates.map(function(n){return (n.textContent||'').trim();}).filter(function(s){return s.length>0;})[0];
+            if(found){ msgText = found; }
+          }catch(err){}
+          showToast(msgText);
+        }, 60);
+      }
+    }, true);
+  }
+
+  function showToast(message){
+    var wrap = document.createElement('div');
+    wrap.className = 'sabor-center-toast';
+    var box = document.createElement('div');
+    box.className = 'toast-box';
+
+    // Размеры ~20% экрана по высоте
+    var h = Math.max(120, Math.round(window.innerHeight * 0.20));
+    var w = Math.min(Math.round(window.innerWidth * 0.8), 600);
+
+    box.style.minHeight = h + 'px';
+    box.style.width = w + 'px';
+
+    // Подбираем размер шрифта для читаемости
+    var fs = Math.max(16, Math.round(window.innerWidth * 0.045));
+    box.style.fontSize = fs + 'px';
+
+    box.textContent = message;
+    wrap.appendChild(box);
+    document.body.appendChild(wrap);
+    setTimeout(function(){ wrap.remove(); }, 2500);
+  }
+
+  function init(){
+    uniformButtons();
+    enlargeModals();
+    attachSubmitToast();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  }else{
+    init();
+  }
+})();
+</script>
+
 </body></html>
